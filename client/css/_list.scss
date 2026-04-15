@@ -223,11 +223,6 @@ input.lpCategoryName { /* specificity */
     }
 }
 
-#main:not(.lpShare) .lpActionsCell .lpWorn,
-#main:not(.lpShare) .lpActionsCell .lpConsumable {
-    visibility: visible;
-}
-
 .lpHeader {
     .lpWeightCell,
     .lpQtyCell,
