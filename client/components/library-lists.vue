@@ -96,6 +96,7 @@
                 <div slot="content">
                     <a class="lpAdd" @click="newList"><i class="lpSprite lpSpriteAdd" />Add new list</a>
                     <a class="lpAdd" @click="importCSV"><i class="lpSprite lpSpriteUpload" />Import CSV</a>
+                    <a class="lpAdd" @click="importJSON"><i class="lpSprite lpSpriteUpload" />Import JSON</a>
                     <a class="lpCopy" @click="copyList"><i class="lpSprite lpSpriteCopy" />Copy a list</a>
                 </div>
             </PopoverHover>
@@ -148,6 +149,9 @@ export default {
         },
         importCSV() {
             bus.$emit('importCSV');
+        },
+        importJSON() {
+            bus.$emit('importJSON');
         },
         handleListReorder() {
             const $lists = document.getElementById('lists');

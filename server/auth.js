@@ -1,13 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('config');
-const mongojs = require('mongojs');
-
-const collections = ['users', 'libraries'];
-const db = mongojs(config.get('databaseUrl'), collections);
-
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const db = require('./db.js');
 const { logWithRequest } = require('./log.js');
 
 const moderatorList = config.get('moderators');

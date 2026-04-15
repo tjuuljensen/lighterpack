@@ -13,7 +13,6 @@ module.exports = function (args) {
     let hovered = null;
     let hoverCallback = null;
     let clickCallback = null;
-    const backgroundColor = 'rgb(245,245,245)';
     const firstRing = { inner: 25, outer: 70 };
     const secondRing = { inner: 80, outer: 120 };
     let tooltip;
@@ -167,8 +166,8 @@ module.exports = function (args) {
             context.strokeStyle = color;
             context.lineWidth = 2;
         } else {
-            context.strokeStyle = backgroundColor;
-            context.lineWidth = 3;
+            context.strokeStyle = getCssValue('--lp-chart-border-color', 'rgb(245,245,245)');
+            context.lineWidth = parseFloat(getCssValue('--lp-chart-border-width', '3'));
         }
 
         context.fillStyle = colorUtils.rgbToString(slice.color);
@@ -182,6 +181,14 @@ module.exports = function (args) {
         context.stroke();
         context.fill();
         context.closePath();
+    }
+
+    function getCssValue(propertyName, fallback) {
+        if (!window.getComputedStyle) {
+            return fallback;
+        }
+
+        return window.getComputedStyle(document.documentElement).getPropertyValue(propertyName).trim() || fallback;
     }
 
     function animateAdd() {

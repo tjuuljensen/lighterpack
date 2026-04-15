@@ -22,6 +22,7 @@ const store = new Vuex.Store({
         saveType: null,
         lastSaveData: null,
         loggedIn: false,
+        previewMode: false,
         directiveInstances: {},
         globalAlerts: [],
     },
@@ -78,6 +79,9 @@ const store = new Vuex.Store({
         toggleOptionalField(state, optionalField) {
             state.library.optionalFields[optionalField] = !state.library.optionalFields[optionalField];
             state.library.getListById(state.library.defaultListId).calculateTotals();
+        },
+        togglePreviewMode(state) {
+            state.previewMode = !state.previewMode;
         },
         updateCurrencySymbol(state, currencySymbol) {
             state.library.currencySymbol = currencySymbol;
@@ -239,6 +243,11 @@ const store = new Vuex.Store({
             list.calculateTotals();
             state.library.defaultListId = list.id;
         },
+        importJSON(state, importData) {
+            state.library.importList(importData);
+            state.library.getListById(state.library.defaultListId).calculateTotals();
+            bus.$emit('optionalFieldChanged');
+        },
         save() {
             // no-op
         },
@@ -305,6 +314,7 @@ const store = new Vuex.Store({
                     'setLoggedIn',
                     'loadLibraryData',
                     'clearLibraryData',
+                    'togglePreviewMode',
                 ];
                 if (!state.library || ignore.indexOf(mutation.type) > -1) {
                     return;

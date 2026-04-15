@@ -1,7 +1,7 @@
 {
   "name": "lighterpack",
-  "version": "2.0.0",
-  "description": "LighterPack =========== LighterPack is a website to track the gear you take on adventures. It is still in Beta.",
+  "version": "2.1.0",
+  "description": "LighterPack helps you track, weigh, preview, and share the gear you bring on adventures.",
   "main": "app.js",
   "scripts": {
     "dev": "node --max-old-space-size=8192 app.js",
@@ -36,6 +36,7 @@
     "mailgun-js": "0.22.0",
     "markdown": "^0.5.0",
     "mini-css-extract-plugin": "1.3.3",
+    "mongodb": "^6.21.0",
     "mongojs": "^2.2.2",
     "morgan": "^1.10.0",
     "mustache": "^2.2.1",

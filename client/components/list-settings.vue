@@ -89,6 +89,11 @@ export default {
                 cssClass: 'lpShowConsumable',
                 value: false,
             }, {
+                name: 'hideZeroQty',
+                displayName: 'Hide zero qty items',
+                cssClass: 'lpHideZeroQty',
+                value: false,
+            }, {
                 name: 'listDescription',
                 displayName: 'List descriptions',
                 cssClass: 'lpShowListDescription',

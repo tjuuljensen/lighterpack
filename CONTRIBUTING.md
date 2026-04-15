@@ -1,13 +1,111 @@
-LighterPack contributing guide
-===========
-Thanks for your interest in contributing to LighterPack!
+# Contributing to LighterPack
 
-LighterPack currently has a bit of technical debt that needs to be paid down before any new feature work can resume. Namely, the original site was written in jQuery and is not very maintainable, so a rewrite using Vue.js is in-progress.
+Thanks for helping improve LighterPack. This guide describes how to make useful, reviewable contributions to the project.
 
-In order to get the project into a state where we can add new features, the only pull requests accepted will be bug fixes and feature parity work for the `vue` branch.
+## How to Start
 
-**2019-05-04 update: The most help we need right now is manually testing the Vue rewrite to ensure it is bug-free and feature-complete with the original version of LighterPack.**
+1. Open an issue for substantial changes before writing a large patch.
+2. Keep pull requests focused on one problem or feature.
+3. Prefer small, reviewable changes over broad rewrites.
+4. Follow the existing Vue 2, Express, SCSS, and data-model patterns unless the change explicitly needs a new approach.
 
-If you're interested in contributing and would like to join the slack channel, please [email me](mailto:galenmaly@gmail.com) for an invite. Might take up to 3 days to get back to you.
+Bug fixes, usability improvements, accessibility improvements, documentation updates, and test coverage are all welcome.
 
-I'm excited to get the rewrite launched so we can resume active feature development! Once we get to that point these contributing guidelines will be updated.
+## Development Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start MongoDB, then run the local app:
+
+```bash
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:8080
+```
+
+On newer Node.js versions, use the legacy OpenSSL provider for webpack commands:
+
+```bash
+NODE_OPTIONS=--openssl-legacy-provider npm run build
+```
+
+PowerShell:
+
+```powershell
+$env:NODE_OPTIONS='--openssl-legacy-provider'; npm run build
+```
+
+## Quality Bar
+
+Before opening a pull request:
+
+- Run the build for frontend changes.
+- Run relevant Playwright tests for UI or workflow changes.
+- Add or update tests when behavior changes.
+- Manually verify the affected workflow in both edit and shared or preview views when relevant.
+- Check light and dark mode when touching UI styling.
+- Avoid committing generated build artifacts unless the release process specifically requires them.
+- Do not commit secrets, real user data, database dumps, private keys, API keys, or personal access tokens.
+
+Useful commands:
+
+```bash
+npm run build
+npx playwright test
+```
+
+## Code Style
+
+- Match the surrounding code style.
+- Keep component changes scoped to the feature or bug being fixed.
+- Prefer existing helpers and data types over duplicating logic.
+- Keep user-facing text clear and practical.
+- Avoid unrelated formatting churn.
+- Use accessible labels, meaningful link text, and keyboard-friendly interactions for new UI.
+- Make dark mode and responsive behavior part of UI review, not an afterthought.
+
+## Data and Compatibility
+
+LighterPack stores user libraries in MongoDB and has long-lived saved list data. Treat data compatibility as a core requirement.
+
+When changing saved data shapes:
+
+- Preserve loading of older libraries.
+- Add migration logic in the data model when needed.
+- Make exports and imports explicit about the data they include.
+- Verify shared links and embedded lists still render correctly.
+
+## Pull Request Checklist
+
+Include the following in the pull request description:
+
+- What changed.
+- Why it changed.
+- How it was tested.
+- Screenshots or short screen recordings for UI changes.
+- Any known limitations or follow-up work.
+
+If the change affects users directly, describe the change in user terms, not only implementation terms.
+
+## Security and Privacy
+
+Report security issues privately to the project maintainer rather than opening a public issue. Include enough detail to reproduce the problem and assess severity.
+
+When working on authentication, sharing, exports, images, email, or moderation:
+
+- Be careful with authorization checks.
+- Avoid leaking private list data through shared routes.
+- Validate and escape user-provided content.
+- Prefer least-privilege configuration and environment-specific secrets.
+
+## Maintenance Notes
+
+This codebase includes older dependencies and build tooling. Modernization is welcome, but dependency upgrades should be isolated, tested, and described clearly. Do not mix large dependency upgrades with unrelated feature work.
