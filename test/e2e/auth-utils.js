@@ -1,14 +1,31 @@
 import { testRoot } from './utils';
 
-export async function getSharedUser() {
-    /* TODO: after migrating to postgres have this method actually create the user if it doesn't already exist. */
-    /* TODO: should also be a uniqueUser method for tests that alter the user state */
-
+export async function getSharedUser(page) {
     const password = 'testtest';
     const username = 'testuser';
     const email = 'testuser@lighterpack.com';
 
-    return { username, password, email };
+    const response = await page.request.post(`${testRoot}register`, {
+        data: { username, password, email },
+    });
+
+    if (response.ok()) {
+        return { username, password, email };
+    }
+
+    if (response.status() === 400) {
+        const body = await response.json().catch(() => null);
+        const errors = body?.errors || [];
+        const duplicateError = errors.some((error) => (
+            error.field === 'username' || error.field === 'email'
+        ));
+
+        if (duplicateError) {
+            return { username, password, email };
+        }
+    }
+
+    throw new Error(`Failed to create shared user ${username}: ${response.status()} ${await response.text()}`);
 }
 
 export async function registerUser(page, username, password, email) {

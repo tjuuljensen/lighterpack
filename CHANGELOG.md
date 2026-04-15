@@ -38,6 +38,7 @@ LighterPack now has theme controls in the page footer for system, light, and dar
 
 ### DB driver rewritten
 
+<<<<<<< HEAD
 To accommodate newer MongoDB versions, the database driver has been completely rewritten. The previous implementation relied on the mongojs library, which uses an older version of the MongoDB driver and lacks support for recent MongoDB features and security updates. The new driver uses the official MongoDB Node.js driver (v6.21.0) directly, providing:
 
 - Improved compatibility with MongoDB 4.0+ and Atlas clusters
@@ -46,3 +47,6 @@ To accommodate newer MongoDB versions, the database driver has been completely r
 - Support for modern MongoDB connection strings (including SRV records)
 - Simplified API with methods for find, findOne, save (insert/update), and remove operations
 - Proper connection lifecycle management with lazy initialization and cleanup
+=======
+To accomodate for newer database versions, a new DB driver was written to replace the mongo connection.
+>>>>>>> 56b7ac5f68b3c9eb4c73c2d58c7f46645273a53b

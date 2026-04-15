@@ -28,7 +28,7 @@ test.describe('User Authentication Tests', () => {
   test('should successfully log in an existing user', async ({ page }) => {
     await page.goto(testRoot);
     
-    const { username, password } = await getSharedUser();
+    const { username, password } = await getSharedUser(page);
 
     await loginUser(page, username, password);
     await expect(page.getByText(`Signed in as ${username}`)).toBeVisible();
@@ -39,7 +39,7 @@ test.describe('User Authentication Tests', () => {
   test('should successfully log out', async ({ page }) => {
     await page.goto(testRoot);
     
-    const { username, password } = await getSharedUser();
+    const { username, password } = await getSharedUser(page);
 
     await loginUser(page, username, password);
     await logoutUser(page);
