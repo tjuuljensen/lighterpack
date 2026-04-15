@@ -27,6 +27,7 @@
 #lpListName {
     font-size: 24px;
     font-weight: 600;
+    margin: 0;
     padding: 12px 15px;
 }
 
@@ -64,6 +65,25 @@
         padding: 0 16px;
     }
 }
+
+.lpThemeDark {
+    #header {
+        .headerItem,
+        .lpTarget,
+        #hamburger {
+            color: #d8dee7;
+        }
+
+        .lpPopover:hover .lpTarget {
+            color: #fff;
+        }
+
+        .lpSprite {
+            filter: brightness(0) invert(1);
+            opacity: 0.85;
+        }
+    }
+}
 </style>
 
 <template>
@@ -74,7 +94,9 @@
                 <span class="headerItem">
                     <a id="hamburger" class="lpTransition" @click="toggleSidebar"><i class="lpSprite lpHamburger" /></a>
                 </span>
-                <input id="lpListName" :value="list.name" type="text" class="lpListName lpSilent headerItem" value="New List" placeholder="List Name" autocomplete="off" name="lastpass-disable-search" @input="updateListName">
+                <h1 v-if="isPreviewMode" id="lpListName" class="lpListName headerItem">{{ list.name || 'New List' }}</h1>
+                <input v-if="!isPreviewMode" id="lpListName" :value="list.name" type="text" class="lpListName lpSilent headerItem" value="New List" placeholder="List Name" autocomplete="off" name="lastpass-disable-search" @input="updateListName">
+                <previewToggle />
                 <share />
                 <listSettings />
                 <accountDropdown v-if="isSignedIn" />
@@ -88,23 +110,14 @@
 
             <list />
 
-            <div id="lpFooter">
-                <div class="lpSiteBy">
-                    Site by <a class="lpHref" href="https://www.galenmaly.com/" target="_blank" rel="noopener noreferrer">Galen Maly</a>
-                    and <a class="lpHref" href="https://github.com/galenmaly/lighterpack/graphs/contributors" target="_blank" rel="noopener noreferrer">friends</a>.
-                </div>
-                <div class="lpContact">
-                    <a class="lpHref" href="https://github.com/galenmaly/lighterpack" target="_blank" rel="noopener noreferrer">Copyleft</a> LighterPack 2019
-                    -
-                    <a class="lpHref" href="mailto:info@lighterpack.com">Contact</a>
-                </div>
-            </div>
+            <appFooter />
         </div>
 
         <globalAlerts />
         <speedbump />
         <copyList />
         <importCSV />
+        <importJSON />
         <itemImage />
         <itemViewImage />
         <itemLink />
@@ -125,11 +138,14 @@ import account from '../components/account.vue';
 import accountDelete from '../components/account-delete.vue';
 import help from '../components/help.vue';
 import list from '../components/list.vue';
+import appFooter from '../components/app-footer.vue';
+import previewToggle from '../components/preview-toggle.vue';
 
 import itemImage from '../components/item-image.vue';
 import itemViewImage from '../components/item-view-image.vue';
 import itemLink from '../components/item-link.vue';
 import importCSV from '../components/import-csv.vue';
+import importJSON from '../components/import-json.vue';
 import copyList from '../components/copy-list.vue';
 import speedbump from '../components/speedbump.vue';
 
@@ -145,9 +161,12 @@ export default {
         accountDelete,
         help,
         list,
+        appFooter,
+        previewToggle,
         itemLink,
         copyList,
         importCSV,
+        importJSON,
         itemImage,
         itemViewImage,
         speedbump,
@@ -168,6 +187,9 @@ export default {
         },
         isSignedIn() {
             return this.$store.state.loggedIn;
+        },
+        isPreviewMode() {
+            return this.$store.state.previewMode;
         },
     },
     beforeMount() {

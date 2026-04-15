@@ -6,6 +6,18 @@
         cursor: pointer;
     }
 }
+
+.lpTotalUnitDisplay {
+    border: 1px solid transparent;
+    display: inline-block;
+    padding: 0 5px;
+    position: relative;
+
+    .lpDisplay {
+        display: inline-block;
+        width: 1.1em;
+    }
+}
 </style>
 
 <template>
@@ -29,7 +41,8 @@
                 </li>
                 <li v-for="category in categories" :key="category.id" :class="{'hover': category.activeHover, 'lpTotalCategory lpRow': true}">
                     <span class="lpCell lpLegendCell">
-                        <colorPicker v-if="category.displayColor" :color="colorToHex(category.displayColor)" @colorChange="updateColor(category, $event)" />
+                        <colorPicker v-if="category.displayColor && !isPreviewMode" :color="colorToHex(category.displayColor)" @colorChange="updateColor(category, $event)" />
+                        <span v-if="category.displayColor && isPreviewMode" class="lpLegend" :style="{'background-color': category.displayColor}" />
                     </span>
                     <span class="lpCell">
                         {{ category.name }}
@@ -53,10 +66,16 @@
                         <span class="lpTotalValue" :title="list.totalQty + ' items'">
                             {{ list.totalWeight | displayWeight(library.totalUnit) }}
                         </span>
-                        <span class="lpTotalUnit"><unitSelect :unit="library.totalUnit" :on-change="setTotalUnit" /></span>
+                        <span class="lpTotalUnit">
+                            <unitSelect v-if="!isPreviewMode" :unit="library.totalUnit" :on-change="setTotalUnit" />
+                            <span v-if="isPreviewMode" class="lpTotalUnitDisplay">
+                                <span class="lpDisplay">{{ library.totalUnit }}</span>
+                                <i class="lpSprite lpExpand hidden" />
+                            </span>
+                        </span>
                     </span>
                 </li>
-                <li v-if="list.totalConsumableWeight" data-weight-type="consumable" class="lpRow lpFooter lpBreakdown lpConsumableWeight">
+                <li v-if="library.optionalFields['consumable']" data-weight-type="consumable" class="lpRow lpFooter lpBreakdown lpConsumableWeight">
                     <span class="lpCell" />
                     <span class="lpCell lpSubtotal">
                         Consumable
@@ -69,7 +88,7 @@
                         <span class="lpSubtotalUnit">{{ library.totalUnit }}</span>
                     </span>
                 </li>
-                <li v-if="list.totalWornWeight" data-weight-type="worn" class="lpRow lpFooter lpBreakdown lpWornWeight">
+                <li v-if="library.optionalFields['worn']" data-weight-type="worn" class="lpRow lpFooter lpBreakdown lpWornWeight">
                     <span class="lpCell" />
                     <span class="lpCell lpSubtotal">
                         Worn
@@ -80,7 +99,7 @@
                         <span class="lpSubtotalUnit">{{ library.totalUnit }}</span>
                     </span>
                 </li>
-                <li v-if="list.totalWornWeight || list.totalConsumableWeight" data-weight-type="base" class="lpRow lpFooter lpBreakdown lpBaseWeight">
+                <li v-if="library.optionalFields['worn'] || library.optionalFields['consumable']" data-weight-type="base" class="lpRow lpFooter lpBreakdown lpBaseWeight">
                     <span class="lpCell" />
                     <span class="lpCell lpSubtotal" :title="$options.filters.displayWeight(list.totalPackWeight, library.totalUnit) + ' ' + library.totalUnit + ' pack weight (consumable + base weight)'">
                         Base Weight
@@ -131,6 +150,9 @@ export default {
                 return category;
             });
         },
+        isPreviewMode() {
+            return this.$store.state.previewMode;
+        },
     },
     watch: {
         '$store.state.library.defaultListId': 'updateChart',
@@ -139,6 +161,10 @@ export default {
     },
     mounted() {
         this.updateChart();
+        bus.$on('themeChanged', this.updateChart);
+    },
+    beforeDestroy() {
+        bus.$off('themeChanged', this.updateChart);
     },
     methods: {
         updateChart(type) {

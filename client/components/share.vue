@@ -18,6 +18,7 @@
                     <textarea id="embedUrl" v-select-on-focus>&lt;script src="{{ this.baseUrl }}/e/{{ this.externalId }}"&gt;&lt;/script&gt;&lt;div id="{{ this.externalId }}"&gt;&lt;/div&gt;</textarea>
                 </div>
                 <a id="csvUrl" :href="csvUrl" target="_blank" class="lpHref"><i class="lpSprite lpSpriteDownload" />Export to CSV</a>
+                <a href="" class="lpHref" @click.prevent="exportJSON"><i class="lpSprite lpSpriteDownload" />Export to JSON (Detailed)</a>
             </div>
         </PopoverHover>
     </span>
@@ -82,6 +83,28 @@ export default {
                     });
             }
             bus.$emit('show-share-box');
+        },
+        exportJSON() {
+            const exportData = this.library.exportList(this.library.defaultListId);
+
+            if (!exportData) {
+                return;
+            }
+
+            const json = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            let fileName = exportData.list.name || 'lighterpack-list';
+
+            fileName = fileName.replace(/[^a-z0-9-]/gi, '_');
+
+            link.href = url;
+            link.download = `${fileName}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
         },
     },
 };

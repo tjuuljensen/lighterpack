@@ -3,6 +3,9 @@
 .lp {
     &,
     body {
+        --lp-chart-border-color: #f5f5f5;
+        --lp-chart-border-width: 3;
+
         background: $background1;
         box-sizing: border-box;
         color: $content;
@@ -366,6 +369,129 @@
 
     .lpHasBlackout & {
         display: block;
+    }
+}
+
+.lp.lpThemeDark {
+    &,
+    body {
+        --lp-chart-border-color: #182230;
+        --lp-chart-border-width: 1;
+
+        background: #182230;
+        color: #d8dee7;
+    }
+
+    input,
+    select,
+    textarea {
+        background: #111a25;
+        color: #edf2f7;
+    }
+
+    select {
+        color-scheme: dark;
+    }
+
+    hr,
+    .lpCell,
+    .lpItem,
+    .lpItemsHeader,
+    .lpItemsFooter {
+        border-color: #4d5b69;
+    }
+
+    .lpListName,
+    .lpSilent {
+        color: #edf2f7;
+    }
+
+    .lpSilent:hover,
+    .lpSilent:focus {
+        background-color: #111a25;
+        border-color: #4d5b69;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) inset;
+    }
+
+    #header .lpSprite,
+    .lpExpand {
+        filter: brightness(0) invert(1);
+        opacity: 0.85;
+    }
+
+    .lpPopover .lpContent,
+    .lpPopover .lpContent::before,
+    .lpPopover .lpContent::after,
+    .lpModal {
+        background: #223044;
+        color: #edf2f7;
+    }
+
+    .lpFields {
+        input[type=text],
+        input[type=email],
+        input[type=password],
+        textarea {
+            background: #111a25;
+            border-color: #4d5b69;
+            color: #edf2f7;
+        }
+    }
+
+    #sidebar {
+        background: #111a25;
+
+        ul {
+            background: #182230;
+        }
+    }
+
+    .lpCategory.gu-mirror,
+    .lpItem.gu-mirror,
+    .lpItemsHeader.gu-mirror,
+    .lpItemsFooter.gu-mirror {
+        background: #223044;
+    }
+
+    .lpUnitSelect {
+        &:hover,
+        &.lpHover,
+        &.lpOpen {
+            background: #111a25;
+            border-color: #4d5b69;
+
+            .lpExpand {
+                opacity: 1;
+            }
+        }
+
+        .lpUnitDropdown {
+            background: #223044;
+            border-color: #4d5b69;
+            color: #edf2f7;
+        }
+    }
+
+    .hover,
+    .lpWarning {
+        background: #3a3517;
+    }
+
+    .lpAppFooter {
+        color: #9ca7b5;
+    }
+
+    .lpThemeToggle {
+        background: #0f1722;
+
+        &::after {
+            background: #8b98a8;
+        }
+    }
+
+    .lpLegend {
+        border-color: #6d7985;
+        border-width: 0.5px;
     }
 }
 

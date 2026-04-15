@@ -8,11 +8,8 @@ const Mustache = require('mustache');
 const extend = require('node.extend');
 const markdown = require('markdown').markdown;
 const config = require('config');
-const mongojs = require('mongojs');
 const { logWithRequest, logger } = require('./log.js');
-
-const collections = ['users', 'libraries'];
-const db = mongojs(config.get('databaseUrl'), collections);
+const db = require('./db.js');
 
 const weightUtils = require('../client/utils/weight.js');
 const dataTypes = require('../client/dataTypes.js');
@@ -364,6 +361,11 @@ const renderCategory = function (category, args) {
     let items = '';
     for (const i in category.categoryItems) {
         const categoryItem = category.categoryItems[i];
+
+        if (args.optionalFields.hideZeroQty && parseFloat(categoryItem.qty) === 0) {
+            continue;
+        }
+
         const item = category.library.getItemById(categoryItem.itemId);
         extend(item, categoryItem);
         items += renderItem(item, args);

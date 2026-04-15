@@ -8,9 +8,9 @@ const router = express.Router();
 const fs = require('fs');
 const request = require('request');
 const formidable = require('formidable');
-const mongojs = require('mongojs');
 const config = require('config');
 const { logWithRequest } = require('./log.js');
+const db = require('./db.js');
 
 const { authenticateUser, verifyPassword } = require('./auth.js');
 
@@ -19,9 +19,6 @@ let mailgun;
 if (config.get('mailgunAPIKey')) {
     mailgun = require('mailgun-js')({ apiKey: config.get('mailgunAPIKey'), domain: config.get('mailgunDomain') });
 }
-
-const collections = ['users', 'libraries'];
-const db = mongojs(config.get('databaseUrl'), collections);
 
 const dataTypes = require('../client/dataTypes.js');
 
@@ -69,13 +66,23 @@ router.post('/register', (req, res) => {
     logWithRequest(req, { message: 'Attempting to register', username });
 
     db.users.find({ username }, (err, users) => {
-        if (err || users.length) {
+        if (err) {
+            logWithRequest(req, { message: 'Username lookup error', username, error: err.message });
+            return res.status(500).json({ errors: [{ message: 'An error occurred, please try again later.' }] });
+        }
+
+        if (users.length) {
             logWithRequest(req, { message: 'User exists', username });
             return res.status(400).json({ errors: [{ field: 'username', message: 'That username already exists, please pick a different username.' }] });
         }
 
         db.users.find({ email }, (err, users) => {
-            if (err || users.length) {
+            if (err) {
+                logWithRequest(req, { message: 'Email lookup error', email, error: err.message });
+                return res.status(500).json({ errors: [{ message: 'An error occurred, please try again later.' }] });
+            }
+
+            if (users.length) {
                 logWithRequest(req, { message: 'User email exists', email });
                 return res.status(400).json({ errors: [{ field: 'email', message: 'A user with that email already exists.' }] });
             }
@@ -105,10 +112,16 @@ router.post('/register', (req, res) => {
                             syncToken: 0,
                         };
                         logWithRequest(req, { message: 'Saving new user', username });
-                        db.users.save(newUser);
-                        const out = { username, library: JSON.stringify(newUser.library), syncToken: 0 };
-                        res.cookie('lp', token, { path: '/', maxAge: 365 * 24 * 60 * 1000 });
-                        return res.status(200).json(out);
+                        db.users.save(newUser, (err) => {
+                            if (err) {
+                                logWithRequest(req, { message: 'Saving new user failed', username, error: err.message });
+                                return res.status(500).json({ errors: [{ message: 'An error occurred, please try again later.' }] });
+                            }
+
+                            const out = { username, library: JSON.stringify(newUser.library), syncToken: 0 };
+                            res.cookie('lp', token, { path: '/', maxAge: 365 * 24 * 60 * 1000 });
+                            return res.status(200).json(out);
+                        });
                     });
                 });
             });

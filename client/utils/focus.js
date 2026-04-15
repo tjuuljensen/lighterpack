@@ -35,6 +35,27 @@ Vue.directive('select-on-bus', {
     },
 });
 
+const growTextarea = function (el) {
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+};
+
+Vue.directive('autogrow', {
+    inserted(el) {
+        el.style.overflowY = 'hidden';
+        el._autogrowHandler = () => growTextarea(el);
+        el.addEventListener('input', el._autogrowHandler);
+        Vue.nextTick(el._autogrowHandler);
+    },
+    componentUpdated(el) {
+        Vue.nextTick(() => growTextarea(el));
+    },
+    unbind(el) {
+        el.removeEventListener('input', el._autogrowHandler);
+        delete el._autogrowHandler;
+    },
+});
+
 Vue.directive('empty-if-zero', {
     inserted(el) {
         el.addEventListener('focus', (evt) => {

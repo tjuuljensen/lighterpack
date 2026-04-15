@@ -3,12 +3,19 @@ const assignIn = require('lodash/assignIn');
 const colorUtils = require('./utils/color.js');
 const weightUtils = require('./utils/weight.js');
 
+const LIST_JSON_EXPORT_TYPE = 'lighterpack-list';
+
 const defaultOptionalFields = {
     images: false,
     price: false,
     worn: true,
     consumable: true,
+    hideZeroQty: false,
     listDescription: false,
+};
+
+const cloneData = function (input) {
+    return JSON.parse(JSON.stringify(input));
 };
 
 const Item = function ({ id, unit }) {
@@ -451,11 +458,15 @@ Library.prototype.copyList = function (id) {
     const copiedList = this.newList();
 
     copiedList.name = `Copy of ${oldList.name}`;
+    copiedList.description = oldList.description;
     for (const i in oldList.categoryIds) {
         const oldCategory = this.getCategoryById(oldList.categoryIds[i]);
         const copiedCategory = this.newCategory({ list: copiedList });
 
         copiedCategory.name = oldCategory.name;
+        if (oldCategory.color) {
+            copiedCategory.color = cloneData(oldCategory.color);
+        }
 
         for (const j in oldCategory.categoryItems) {
             copiedCategory.addItem(oldCategory.categoryItems[j]);
@@ -463,6 +474,173 @@ Library.prototype.copyList = function (id) {
     }
 
     return copiedList;
+};
+
+Library.prototype.exportList = function (id) {
+    const list = this.getListById(id);
+
+    if (!list) {
+        return null;
+    }
+
+    const out = {
+        type: LIST_JSON_EXPORT_TYPE,
+        version: '1.0',
+        totalUnit: this.totalUnit,
+        itemUnit: this.itemUnit,
+        optionalFields: cloneData(this.optionalFields),
+        currencySymbol: this.currencySymbol,
+        list: cloneData(list.save()),
+        categories: [],
+        items: [],
+    };
+    const itemIds = {};
+
+    out.list.externalId = '';
+
+    for (const i in list.categoryIds) {
+        const category = this.getCategoryById(list.categoryIds[i]);
+        if (!category) {
+            continue;
+        }
+
+        out.categories.push(cloneData(category.save()));
+
+        for (const j in category.categoryItems) {
+            const categoryItem = category.categoryItems[j];
+            if (categoryItem && this.getItemById(categoryItem.itemId)) {
+                itemIds[categoryItem.itemId] = true;
+            }
+        }
+    }
+
+    for (const itemId in itemIds) {
+        const item = this.getItemById(itemId);
+        if (item) {
+            out.items.push(cloneData(item.save()));
+        }
+    }
+
+    return out;
+};
+
+Library.prototype.importList = function (importData) {
+    if (!importData || importData.type !== LIST_JSON_EXPORT_TYPE) {
+        throw new Error('Invalid LighterPack JSON export.');
+    }
+    if (!importData.list || !Array.isArray(importData.list.categoryIds) || !Array.isArray(importData.categories) || !Array.isArray(importData.items)) {
+        throw new Error('Invalid LighterPack JSON export.');
+    }
+
+    const itemIdMap = {};
+    const categoryIdMap = {};
+    const categoriesById = {};
+    const importedList = this.newList();
+
+    for (const i in importData.items) {
+        const importedItemData = cloneData(importData.items[i]);
+
+        if (!importedItemData || typeof importedItemData !== 'object') {
+            continue;
+        }
+
+        const oldItemId = importedItemData.id;
+        const item = this.newItem({});
+
+        itemIdMap[oldItemId] = item.id;
+        importedItemData.id = item.id;
+        item.load(importedItemData);
+
+        if (item.price) {
+            this.optionalFields.price = true;
+        }
+        if (item.image || item.imageUrl) {
+            this.optionalFields.images = true;
+        }
+    }
+
+    for (const i in importData.categories) {
+        const categoryData = importData.categories[i];
+        if (categoryData && typeof categoryData === 'object') {
+            categoriesById[categoryData.id] = categoryData;
+        }
+    }
+
+    importedList.categoryIds = [];
+
+    for (const i in importData.list.categoryIds) {
+        const oldCategoryId = importData.list.categoryIds[i];
+        const importedCategoryData = categoriesById[oldCategoryId];
+
+        if (!importedCategoryData) {
+            continue;
+        }
+
+        const category = this.newCategory({ list: importedList });
+        const oldCategoryItems = Array.isArray(importedCategoryData.categoryItems) ? importedCategoryData.categoryItems : [];
+        const newCategoryItems = [];
+        const categoryData = cloneData(importedCategoryData);
+
+        categoryIdMap[oldCategoryId] = category.id;
+
+        for (const j in oldCategoryItems) {
+            const categoryItem = cloneData(oldCategoryItems[j]);
+
+            if (!categoryItem || typeof categoryItem !== 'object') {
+                continue;
+            }
+
+            if (!itemIdMap[categoryItem.itemId]) {
+                continue;
+            }
+
+            categoryItem.itemId = itemIdMap[categoryItem.itemId];
+            delete categoryItem._isNew;
+            newCategoryItems.push(categoryItem);
+
+            if (categoryItem.worn) {
+                this.optionalFields.worn = true;
+            }
+            if (categoryItem.consumable) {
+                this.optionalFields.consumable = true;
+            }
+        }
+
+        categoryData.id = category.id;
+        categoryData.categoryItems = newCategoryItems;
+        category.load(categoryData);
+    }
+
+    const importedListData = cloneData(importData.list);
+    importedListData.id = importedList.id;
+    importedListData.categoryIds = importedListData.categoryIds
+        .map(categoryId => categoryIdMap[categoryId])
+        .filter(categoryId => typeof categoryId !== 'undefined');
+    importedListData.externalId = '';
+    importedList.load(importedListData);
+
+    if (importedList.description) {
+        this.optionalFields.listDescription = true;
+    }
+    if (importData.optionalFields) {
+        for (const optionalField in importData.optionalFields) {
+            if (importData.optionalFields[optionalField]) {
+                this.optionalFields[optionalField] = true;
+            }
+        }
+    }
+    if (importData.currencySymbol) {
+        this.currencySymbol = importData.currencySymbol;
+    }
+    if (importData.totalUnit) {
+        this.totalUnit = importData.totalUnit;
+    }
+    if (importData.itemUnit) {
+        this.itemUnit = importData.itemUnit;
+    }
+
+    this.defaultListId = importedList.id;
+    return importedList;
 };
 
 Library.prototype.renderChart = function (type) {

@@ -23,6 +23,15 @@
     }
 }
 
+.lpThemeDark {
+    .lpItem {
+        &:hover,
+        &.ui-sortable-helper {
+            background: #223044;
+        }
+    }
+}
+
 .lpArrows {
     display: inline-block;
     height: 14px;
@@ -49,10 +58,55 @@
     }
 }
 
+.lpMarkdownText {
+    p {
+        margin: 0;
+    }
+
+    *:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.lpPreviewMode {
+    .lpActionsCell {
+        .lpInactivePreviewIcon {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden !important;
+        }
+    }
+}
+
 </style>
 
 <template>
-    <li :id="item.id" :class="'lpItem '+ item.classes">
+    <li v-if="isPreviewMode" :id="item.id" :class="itemClasses">
+        <span v-if="library.optionalFields['images']" class="lpImageCell">
+            <img v-if="thumbnailImage" class="lpItemImage" :src="thumbnailImage" @click="viewItemImage()">
+        </span>
+        <span class="lpName">
+            <a v-if="item.url" :href="item.url" class="lpHref" target="_blank" rel="noopener noreferrer">{{ item.name }}</a>
+            <template v-if="!item.url">{{ item.name }}</template>
+        </span>
+        <div class="lpDescription lpMarkdownText" v-html="renderedDescription" />
+        <span class="lpActionsCell">
+            <i class="lpSprite lpWorn" :class="{lpActive: library.optionalFields['worn'] && categoryItem.worn, lpInactivePreviewIcon: !library.optionalFields['worn'] || !categoryItem.worn}" title="This item is worn and not counted in pack weight." />
+            <i class="lpSprite lpConsumable" :class="{lpActive: library.optionalFields['consumable'] && categoryItem.consumable, lpInactivePreviewIcon: !library.optionalFields['consumable'] || !categoryItem.consumable}" title="This item is a consumable and not counted in pack weight." />
+            <i class="lpSprite lpStar" :class="[starClass, {lpInactivePreviewIcon: !starClass}]" title="This item is starred" />
+        </span>
+        <span v-if="library.optionalFields['price']" class="lpPriceCell lpNumber">
+            {{ item.price | displayPrice(library.currencySymbol) }}
+        </span>
+        <span class="lpWeightCell lpNumber">
+            <span class="lpWeight">{{ item.weight | displayWeight(item.authorUnit) }}</span>
+            <span class="lpUnitSelect lpWeightUnit">{{ item.authorUnit }}</span>
+        </span>
+        <span class="lpQtyCell lpNumber" :qty="categoryItem.qty">
+            {{ categoryItem.qty }}
+        </span>
+    </li>
+    <li v-else :id="item.id" :class="itemClasses">
         <span class="lpHandleCell">
             <div class="lpItemHandle lpHandle" title="Reorder this item" />
         </span>
@@ -93,6 +147,7 @@ import unitSelect from './unit-select.vue';
 
 const utilsMixin = require('../mixins/utils-mixin.js');
 const weightUtils = require('../utils/weight.js');
+const renderMarkdown = require('../utils/markdown.js');
 
 export default {
     name: 'Item',
@@ -137,6 +192,18 @@ export default {
                 return this.item.imageUrl;
             }
             return '';
+        },
+        itemClasses() {
+            return ['lpItem', this.item.classes, { lpItemHasImage: Boolean(this.item.image || this.item.imageUrl) }];
+        },
+        isPreviewMode() {
+            return this.$store.state.previewMode;
+        },
+        renderedDescription() {
+            return renderMarkdown(this.item.description);
+        },
+        starClass() {
+            return this.categoryItem.star ? `lpStar${this.categoryItem.star}` : '';
         },
     },
     watch: {
